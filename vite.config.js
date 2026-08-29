@@ -121,7 +121,9 @@ export default defineConfig(async () => {
   return {
     root: '.',
     publicDir: 'public',
-    plugins: isDev ? [eslintPlugin(), localesJsonProxy()] : [forceMinifyPlugin(), compileLocalesPlugin()],
+    // dev 模式：eslint + locales 代理（dev server 用）+ 仍编译 locales 到 dist（保证 pack:dev 的 ZIP 包含翻译文件）
+    // 生产模式：强制压缩 + 编译 locales
+    plugins: isDev ? [eslintPlugin(), localesJsonProxy(), compileLocalesPlugin()] : [forceMinifyPlugin(), compileLocalesPlugin()],
 
     esbuild: {
       // 移除所有注释，确保完全压缩

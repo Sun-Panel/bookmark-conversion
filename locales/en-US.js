@@ -5,31 +5,61 @@
 
 export default {
   // App basic information
-  APP_NAME: 'Hello World',
-  APP_DESCRIPTION: 'Micro App Hello World',
+  APP_NAME: 'Bookmark Converter',
+  APP_DESCRIPTION: 'Convert browser HTML bookmark files to Sun-Panel v2 importable config files',
+  NETWORK_DESCRIPTION: 'No network required (favicon download is best-effort, falls back to text icons on failure)',
 
-  // Network configuration
-  NETWORK_DESCRIPTION: 'No need to link to any third-party websites',
+  // Widget
+  WIDGET_BM_NAME: 'Bookmark Converter',
+  WIDGET_BM_DESCRIPTION: 'Convert browser HTML bookmarks to Sun-Panel config files, click to open',
 
-  // Widget information
-  WIDGET_HELLO_NAME: 'Demo Widget',
-  WIDGET_HELLO_DESCRIPTION: 'A demo widget',
+  // Page title
+  BM_TITLE: 'Bookmark Converter',
+  BM_SUBTITLE: 'Convert browser HTML bookmark files to Sun-Panel v2 importable config files (config.json + icon folder)',
 
-  // Widget config page
-  WIDGET_CONFIG_TITLE_EDIT: 'Edit Widget',
-  WIDGET_CONFIG_TITLE_ADD: 'Add Widget',
-  WIDGET_CONFIG_SUBTITLE: 'Configure widget display content and style options',
-  WIDGET_CONFIG_SECTION_APPEARANCE: 'Appearance Settings',
-  WIDGET_CONFIG_LABEL_BACKGROUND: 'Card Background',
-  WIDGET_CONFIG_LABEL_USE_SYSTEM_BG: 'Use System Background Color, uncheck to follow system auto switch light/dark mode',
-  WIDGET_CONFIG_LABEL_SHOW_LOGO: 'Show Logo',
-  WIDGET_CONFIG_SECTION_TEXT: 'Text Content',
-  WIDGET_CONFIG_LABEL_DISPLAY_MODE: 'Display Mode',
-  WIDGET_CONFIG_OPTION_TOGGLE: 'Click to Toggle (World / Sun-Panel)',
-  WIDGET_CONFIG_OPTION_CUSTOM: 'Custom Text',
-  WIDGET_CONFIG_LABEL_CUSTOM_TEXT: 'Custom Text',
-  WIDGET_CONFIG_PLACEHOLDER_CUSTOM_TEXT: 'Enter text to display',
-  WIDGET_CONFIG_BUTTON_SAVE: 'Save Widget',
-  WIDGET_CONFIG_BUTTON_CREATE: 'Create Widget',
-  WIDGET_CONFIG_DEBUG_TITLE: 'Widget Config Data:',
+  // Buttons
+  BM_BUTTON_IMPORT: '1. Import HTML Bookmarks',
+  BM_BUTTON_CONVERT: '2. Start Conversion',
+  BM_BUTTON_EXPORT: '3. Export Config File',
+  BM_CONVERTING: 'Converting...',
+  BM_EXPORTING: 'Exporting...',
+  BM_CONFIRM_EXPORT: 'Confirm Export',
+  BM_CANCEL: 'Cancel',
+  BM_NO_FILE_SELECTED: 'No file selected',
+  BM_DEDUPE: 'Deduplicate',
+  BM_DEDUPE_TIP: 'Remove links with identical URL and title (keep the first)',
+
+  // Messages
+  BM_NO_FILE: 'Please import an HTML bookmark file first',
+  BM_IMPORT_ERROR: 'Failed to read file, please retry',
+  BM_PARSE_EMPTY: 'No valid bookmarks found. Please check the file format (Netscape bookmark HTML)',
+  BM_PARSE_ERROR: 'Failed to parse bookmark file',
+  BM_EXPORT_NONE: 'Please select links to export first',
+  BM_EXPORT_SUCCESS: 'Export successful! Generated config for {count} links',
+  BM_EXPORT_ERROR: 'Export failed, please retry',
+  BM_DEDUPE_DONE: 'Removed {count} duplicate links',
+  BM_DEDUPE_NONE: 'No duplicate links found',
+
+  // Stats
+  BM_STAT_GROUPS: 'Groups',
+  BM_STAT_LINKS: 'Links',
+  BM_STAT_CHECKED: 'Selected',
+  BM_STAT_ICONS: 'Icons',
+  BM_FAVICON_DOWNLOADING: 'Downloading favicons',
+  BM_FAVICON_SUCCESS: 'OK',
+
+  // Tree actions
+  BM_SELECT_ALL: 'Select All',
+  BM_CLEAR_ALL: 'Clear All',
+  BM_TREE_EMPTY: 'No links to display',
+  BM_TREE_HINT: 'After import and conversion, the checkable bookmark tree will be shown here',
+
+  // Export dialog
+  BM_EXPORT_TITLE: 'Choose Grouping Plan',
+  BM_PLAN_A_TITLE: 'Plan A: Top-level Groups',
+  BM_PLAN_A_DESC: 'Only top-level folders become groups; all nested links are flattened into their top-level group (fewer groups, larger each)',
+  BM_PLAN_B_TITLE: 'Plan B: All Folder Groups',
+  BM_PLAN_B_DESC: 'Every folder at any level becomes a group; links belong to their direct parent folder (more groups, smaller each)',
+
+  BM_FOOTER_HINT: 'Tip: Icons are automatically converted to image files (base64 icons 100%; favicon is best-effort, falls back to text icons). The exported file can be imported directly into Sun-Panel',
 };

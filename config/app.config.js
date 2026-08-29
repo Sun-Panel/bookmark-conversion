@@ -13,9 +13,9 @@ export default {
   // 作者标识
   author: 'hslr',
   // 应用唯一标识（作者标识-应用标识）
-  microAppId: 'hslr-hello-world',
+  microAppId: 'hslr-sun-panel-bookmark-conversion',
   // 应用版本
-  version: '1.1.0',
+  version: '1.0.0',
   // 入口文件
   entry: 'main.js',
   // 图标
@@ -41,7 +41,7 @@ export default {
 
   // 默认语言（当主应用语言在微应用中不存在时，回退到此语言）
   // 如果不设置，默认为 'en-US'
-  defaultLocale: 'en-US',
+  defaultLocale: 'zh-CN',
 
   // 权限配置
   permissions: [
@@ -50,8 +50,10 @@ export default {
   ],
 
   // 网络域名白名单
+  // favicon 下载使用 <img> 标签（不经过 fetch），
+  // 但仍可能受微应用网络白名单限制；如遇失败会自动退回文字图标
   networkDomains: [
-
+    // 如需放宽，可在此添加 favicon 域名或通配（受主应用支持程度限制）
   ],
 
   // 数据节点配置

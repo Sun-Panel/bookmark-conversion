@@ -4,42 +4,40 @@
  */
 
 // 导入组件对象（只在浏览器环境使用）
-import { Widget as HelloWorldWidget } from '../src/components/widget.js';
-import { WidgetConfig as HelloWorldConfig } from '../src/components/widgetConfig.js';
+import { BookmarkConversionPage } from '../src/components/bookmarkPage.js';
+import { BookmarkConversionWidget } from '../src/components/widget.js';
 
 export default {
   // =======================
   // 页面注册
   // =======================
   pages: {
-    'hello-world-config': {
+    'bookmark-conversion-main': {
       // 组件对象（直接引用）
-      component: HelloWorldConfig,
+      component: BookmarkConversionPage,
       // 背景颜色 支持css样式，为空底色默认为白色
-      background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+      background: '',
       // 头部文字颜色
       headerTextColor: '#1890ff',
+      // 微应用入口页面/主页面
+      type: 'main',
     },
-
   },
 
   // =======================
   // 小部件（卡片）注册
   // =======================
   widgets: {
-    'hello-world-widget': {
+    'bookmark-conversion-widget': {
       // 组件对象（直接引用）widgetId
-      component: HelloWorldWidget,
-      // 绑定的小部件配置 Page 组件名字
-      // 当主平台添加当前应用的小部件时会以窗口的形式打开此组件页面进行配置
-      configComponentName: 'hello-world-config',
-      // 卡片尺寸: 1x1 1x2 1xfull 2x1 2x2 2x4
-      size: ['1x1', '1x2', '1xfull', '2x1', '2x2', '2x4','4x4'],
+      component: BookmarkConversionWidget,
+      // 卡片尺寸: 1x1 1x2 2x2
+      size: ['1x1', '1x2', '2x2'],
       // 为空使用Sun-Panel默认背景颜色作为底色 支持css样式
       background: '',
       // v1.1 新增字段
-      widgetName: '$t:WIDGET_HELLO_NAME',
-      widgetDescription: '$t:WIDGET_HELLO_DESCRIPTION',
+      widgetName: '$t:WIDGET_BM_NAME',
+      widgetDescription: '$t:WIDGET_BM_DESCRIPTION',
       sort: 10, // 排序权重，数字越小越靠前
     },
   },

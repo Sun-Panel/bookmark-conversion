@@ -1,79 +1,147 @@
+/**
+ * 书签转换工具 - 小部件组件
+ * 点击小部件打开书签转换工具页面
+ */
 import { SunPanelWidgetElement } from '@sun-panel/micro-app';
 import { html, css } from 'lit';
 
-export class Widget extends SunPanelWidgetElement {
+export class BookmarkConversionWidget extends SunPanelWidgetElement {
   static properties = {
     spCtx: { type: Object, attribute: false },
-    name: { type: String },
   };
 
   onInitialized() {
-    this.name = 'World';
-    this.handleChangeName();
+    // i18n 由基类自动初始化
   }
 
-  handleChangeName() {
-    if (this.spCtx?.widgetInfo?.config?.textOption === 'custom') {
-      this.name = this.spCtx.widgetInfo.config?.customText;
-      return;
-    }
-    this.name = this.name === 'World' ? 'Sun-Panel' : 'World';
+  /** 点击小部件，打开书签转换工具页面 */
+  openToolPage() {
+    this.spCtx?.api?.window?.open?.({
+      componentName: 'bookmark-conversion-main',
+      title: this.t('BM_TITLE'),
+      windowConfig: {
+        width: 960,
+        height: 720,
+        resize: true,
+        move: true,
+      },
+    });
   }
 
-  onWidgetInfoChanged(newWidgetInfo, _oldWidgetInfo) {
-    if (newWidgetInfo?.config?.textOption === 'custom') {
-      this.name = newWidgetInfo.config?.customText;
-    } else {
-      this.name = 'World';
-    }
-    this.requestUpdate();
+  /** 图标 */
+  renderIcon() {
+    return html`<img class="widget-icon" src=${this.getAssetPath('/icon.png')} alt="bookmark-conversion" />`;
   }
 
-  render1x1() {
-    return html`<div class="greeting" style="font-size: 20px;margin: 5px;">Hello !</div>`;
-  }
-
-  render1x2() {
-    return html`<div class="greeting" style="font-size: 20px;">Hello, <span class="name" @click=${this.handleChangeName}>${this.name} </span> !</div>`;
-  }
-
-  render2x1() {
-    return html`<div class="greeting" style="margin: 5px;font-size: 20px;">Hello, <span class="name" @click=${this.handleChangeName}>${this.name} </span> !</div>`;
-  }
-
-  render2x2() {
-    return html`<div class="greeting" style="font-size: 20px;">Hello, <span class="name" @click=${this.handleChangeName}>${this.name} </span> !</div>`;
-  }
-
-  render2x4() {
-    return html`<div class="greeting" style="font-size: 30px;">Hello, <span class="name" @click=${this.handleChangeName}>${this.name} </span> !</div>`;
-  }
-
-  render4x4() {
-    return html`<div class="greeting" style="font-size: 35px;">Hello, <span class="name" @click=${this.handleChangeName}>${this.name} </span> !</div>`;
-  }
-
-  render1xfull() {
-    return this.render2x4();
-  }
-
-  render() {
-    const showLogo = this.spCtx?.widgetInfo?.config?.showLogo ?? true;
-    const useSystemBgColor = this.spCtx?.widgetInfo?.config?.useSystemBgColor ?? false;
+  /** 标题 + 描述 */
+  renderTitle() {
     return html`
-      <div class="container" style="background: ${useSystemBgColor ? 'transparent' : ((this.spCtx && this.spCtx.darkMode) ? '#181818' : 'white')}">
-        ${showLogo ? html`<div class="background-image"><img src=${this.getAssetPath('/sun-panel-logo.png')} /></div>` : ''}
-        ${this.spCtx.widgetInfo.gridSize === '1x1' ? this.render1x1() : ''}
-        ${this.spCtx.widgetInfo.gridSize === '1x2' ? this.render1x2() : ''}
-        ${this.spCtx.widgetInfo.gridSize === '2x1' ? this.render2x1() : ''}
-        ${this.spCtx.widgetInfo.gridSize === '2x2' ? this.render2x2() : ''}
-        ${this.spCtx.widgetInfo.gridSize === '2x4' ? this.render2x4() : ''}
-        ${this.spCtx.widgetInfo.gridSize === '4x4' ? this.render4x4() : ''}
-        ${this.spCtx.widgetInfo.gridSize === '1xfull' ? this.render1xfull() : ''}
+      <div class="text-wrap">
+        <div class="widget-title">${this.t('BM_TITLE')}</div>
+        <div class="widget-desc">${this.t('BM_SUBTITLE')}</div>
       </div>
     `;
   }
 
-  static styles = css`.greeting{font-weight:bold;color:#1890ff;z-index:1}.container{font-family:Arial,sans-serif;height:100%;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative}.background-image{position:absolute;height:60%;right:10px;top:10px;pointer-events:none;transform:rotate(-15deg);opacity:0.5;filter:blur(5px)}.background-image img{width:100%;height:100%;object-fit:cover}.name{cursor:pointer;font-weight:bold;background:linear-gradient(45deg,#1890ff,#00c4ff,#00ff87);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:20px 0}`;
-}
+  render1x1() {
+    return html`
+      <div class="container container-1x1" @click=${this.openToolPage}>
+        ${this.renderIcon()}
+      </div>
+    `;
+  }
 
+  render1x2() {
+    return html`
+      <div class="container container-row" @click=${this.openToolPage}>
+        ${this.renderIcon()}
+        <div class="text-wrap">
+          <div class="widget-title">${this.t('BM_TITLE')}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  render2x2() {
+    return html`
+      <div class="container" @click=${this.openToolPage}>
+        ${this.renderIcon()}
+        ${this.renderTitle()}
+      </div>
+    `;
+  }
+
+  render() {
+    const gridSize = this.spCtx?.widgetInfo?.gridSize;
+    const isDark = this.spCtx?.darkMode;
+    const bg = isDark ? 'linear-gradient(135deg, #1f2937 0%, #111827 100%)' : 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)';
+    return html`
+      <div class="root" style="background: ${bg}">
+        ${gridSize === '1x1' ? this.render1x1() : ''}
+        ${gridSize === '1x2' ? this.render1x2() : ''}
+        ${gridSize === '2x2' ? this.render2x2() : ''}
+      </div>
+    `;
+  }
+
+  static styles = css`
+    .root {
+      height: 100%;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+    .container-row {
+      flex-direction: row;
+    }
+    .container-1x1 {
+      gap: 0;
+      padding: 8px;
+    }
+    .widget-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      object-fit: cover;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+    }
+    .container-1x1 .widget-icon {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+    }
+    .text-wrap {
+      min-width: 0;
+    }
+    .widget-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #4f46e5;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .widget-desc {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  `;
+}
