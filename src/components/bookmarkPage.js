@@ -49,6 +49,9 @@ export class BookmarkConversionPage extends SunPanelPageElement {
     this.exporting = false;
     this.exportMessage = '';
 
+    // 预览 Tab：'plans'（方案预览，默认）| 'tree'（原始树形勾选）
+    this.previewTab = 'plans';
+
     // 错误提示
     this.errorMessage = '';
   }
@@ -70,6 +73,7 @@ export class BookmarkConversionPage extends SunPanelPageElement {
       this.fileName = file.name;
       this.errorMessage = '';
       this.treeReady = false;
+      this.previewTab = 'plans';
       this.tree = [];
       this.checkedIds.clear();
       this.collapsedIds.clear();
@@ -152,6 +156,7 @@ export class BookmarkConversionPage extends SunPanelPageElement {
 
       this.treeReady = true;
       this.converting = false;
+      this.previewTab = 'plans'; // 转换完成后默认显示方案预览
       this.requestUpdate();
 
       // 自动后台下载 favicon（不阻塞）
@@ -179,7 +184,7 @@ export class BookmarkConversionPage extends SunPanelPageElement {
       {return;}
       let blob = null;
       try {
-        blob = await downloadFavicon(link.url);
+        blob = await downloadFavicon(link.url, this.spCtx);
       }
       catch {
         blob = null;
@@ -359,6 +364,11 @@ export class BookmarkConversionPage extends SunPanelPageElement {
     this.requestUpdate();
   }
 
+  selectPlan(plan) {
+    this.exportPlan = plan === 'B' ? 'B' : 'A';
+    this.requestUpdate();
+  }
+
   async confirmExport() {
     this.exporting = true;
     this.exportMessage = '';
@@ -440,6 +450,31 @@ export class BookmarkConversionPage extends SunPanelPageElement {
   }
 
   // ============================================================
+  // 预览 Tab 切换
+  // ============================================================
+  setPreviewTab(tab) {
+    this.previewTab = tab === 'tree' ? 'tree' : 'plans';
+    this.requestUpdate();
+  }
+
+  // ============================================================
+  // 方案预览：实时计算两个方案的分组（过滤未勾选链接）
+  // ============================================================
+  getPlanPreview() {
+    if (!this.treeReady) {
+      return null;
+    }
+    const checkedSet = this.checkedIds;
+    const buildPreview = (groupFn) => groupFn(this.tree)
+      .map(g => ({ ...g, nodes: g.nodes.filter(n => n.type === 'link' && checkedSet.has(n.id)) }))
+      .filter(g => g.nodes.length > 0);
+    return {
+      A: buildPreview(buildGroupsPlanA),
+      B: buildPreview(buildGroupsPlanB),
+    };
+  }
+
+  // ============================================================
   // 统计
   // ============================================================
   getStats() {
@@ -464,14 +499,15 @@ export class BookmarkConversionPage extends SunPanelPageElement {
     if (node.type === 'folder') {
       const state = this.getFolderCheckState(node);
       const collapsed = this.collapsedIds.has(node.id);
+      const hasLinks = countLinks(node.children) > 0;
       return html`
         <div class="tree-folder">
-          <div class="tree-row folder-row" style="padding-left: ${depth * 20}px">
+          <div class="tree-row folder-row ${hasLinks ? '' : 'folder-empty-row'}" style="padding-left: ${depth * 20}px">
             <span class="collapse-icon" @click=${() => this.toggleCollapse(node.id)}>
               ${collapsed ? '▸' : '▾'}
             </span>
             <label class="check-label">
-              <input type="checkbox"
+              <input type="checkbox" ?disabled=${!hasLinks}
                 .indeterminate=${state === 'partial'}
                 .checked=${state === 'all' || state === 'partial'}
                 @change=${() => this.toggleFolder(node)}>
@@ -479,6 +515,7 @@ export class BookmarkConversionPage extends SunPanelPageElement {
             <span class="folder-icon">📁</span>
             <span class="folder-name" @click=${() => this.toggleCollapse(node.id)}>${node.title}</span>
             <span class="folder-count">(${countLinks(node.children)})</span>
+            ${!hasLinks ? html`<span class="folder-empty-tag">${this.t('BM_FOLDER_EMPTY')}</span>` : ''}
           </div>
           ${collapsed ? '' : html`
             <div class="tree-children">
@@ -521,9 +558,48 @@ export class BookmarkConversionPage extends SunPanelPageElement {
     return html`<span class="link-icon" style="background:${getTextIconColor(node.title)}">${getTextIconChar(node.title)}</span>`;
   }
 
+  // ============================================================
+  // 方案预览渲染
+  // ============================================================
+  renderPlanPreview(groups, planKey) {
+    const MAX_LINKS = 12;
+    const isPlanA = planKey === 'A';
+    return html`
+      <div class="plan-preview">
+        <div class="plan-preview-header">
+          <div class="plan-preview-title">${isPlanA ? this.t('BM_PLAN_A_TITLE') : this.t('BM_PLAN_B_TITLE')}</div>
+          <div class="plan-preview-desc">${isPlanA ? this.t('BM_PLAN_A_DESC') : this.t('BM_PLAN_B_DESC')}</div>
+        </div>
+        <div class="plan-preview-body">
+          ${groups.length ? groups.map(g => html`
+            <div class="preview-group">
+              <div class="preview-group-title">
+                <span class="folder-icon">📁</span>
+                <span class="preview-group-name" title="${g.title}">${g.title}</span>
+                <span class="preview-group-count">(${g.nodes.length})</span>
+              </div>
+              <div class="preview-group-links">
+                ${g.nodes.slice(0, MAX_LINKS).map(link => html`
+                  <div class="preview-link">
+                    ${this.renderLinkIcon(link)}
+                    <span class="preview-link-title" title="${link.title}">${link.title}</span>
+                  </div>
+                `)}
+                ${g.nodes.length > MAX_LINKS ? html`
+                  <div class="preview-more">… ${this.t('BM_PREVIEW_MORE', { count: g.nodes.length - MAX_LINKS })}</div>
+                ` : ''}
+              </div>
+            </div>
+          `) : html`<div class="preview-empty">${this.t('BM_EXPORT_NONE')}</div>`}
+        </div>
+      </div>
+    `;
+  }
+
   render() {
     const darkMode = this.spCtx?.darkMode ?? false;
     const stats = this.getStats();
+    const planPreview = this.treeReady ? this.getPlanPreview() : null;
 
     return html`
       <style>
@@ -626,6 +702,62 @@ export class BookmarkConversionPage extends SunPanelPageElement {
         .tree-actions a { color: #1890ff; cursor: pointer; text-decoration: none; }
         .tree-actions a:hover { text-decoration: underline; }
 
+        /* 预览 Tab */
+        .preview-tabs {
+          display: flex; gap: 4px; margin-bottom: 10px;
+          border-bottom: 1px solid ${darkMode ? 'rgba(60,60,60,.8)' : 'rgba(232,232,232,.8)'};
+        }
+        .preview-tab {
+          padding: 6px 18px; cursor: pointer; font-size: 13px; color: #8c8c8c;
+          border-bottom: 2px solid transparent; margin-bottom: -1px;
+          transition: color .2s;
+        }
+        .preview-tab:hover { color: #1890ff; }
+        .preview-tab.active { color: #1890ff; border-bottom-color: #1890ff; font-weight: 600; }
+
+        /* 方案预览 */
+        .plans-preview {
+          display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+          flex: 1; min-height: 0;
+        }
+        .plan-preview {
+          border: 1px solid ${darkMode ? 'rgba(60,60,60,.8)' : 'rgba(232,232,232,.8)'};
+          border-radius: 8px; overflow: hidden;
+          background: ${darkMode ? 'rgba(20,20,20,.5)' : 'rgba(255,255,255,.6)'};
+          display: flex; flex-direction: column; min-height: 200px;
+        }
+        .plan-preview-header {
+          padding: 8px 12px;
+          background: ${darkMode ? 'rgba(38,38,38,.7)' : 'rgba(250,250,250,.8)'};
+          border-bottom: 1px solid ${darkMode ? 'rgba(60,60,60,.8)' : 'rgba(232,232,232,.8)'};
+        }
+        .plan-preview-title { font-weight: 600; font-size: 13px; color: #1890ff; }
+        .plan-preview-desc { font-size: 11px; color: #8c8c8c; margin-top: 2px; }
+        .plan-preview-body { flex: 1; overflow-y: auto; padding: 8px 10px; max-height: 420px; }
+        .preview-group { margin-bottom: 10px; }
+        .preview-group-title {
+          display: flex; align-items: center; gap: 6px;
+          font-weight: 600; font-size: 13px; padding: 3px 0;
+        }
+        .preview-group-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .preview-group-count { color: #8c8c8c; font-weight: 400; font-size: 11px; }
+        .preview-group-links { padding-left: 22px; }
+        .preview-link { display: flex; align-items: center; gap: 6px; padding: 2px 0; font-size: 12px; }
+        .preview-link .link-icon { width: 18px; height: 18px; font-size: 10px; border-radius: 4px; }
+        .preview-link-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: ${darkMode ? '#bbb' : '#595959'}; }
+        .preview-more { font-size: 11px; color: #8c8c8c; padding-left: 24px; }
+        .preview-empty { text-align: center; color: #8c8c8c; padding: 30px 0; font-size: 12px; }
+
+        /* 空文件夹 */
+        .folder-empty-row { opacity: .75; }
+        .folder-empty-tag {
+          font-size: 10px; color: ${darkMode ? '#8c8c8c' : '#bfbfbf'};
+          border: 1px solid ${darkMode ? '#434343' : '#e8e8e8'};
+          border-radius: 3px; padding: 0 5px; line-height: 16px;
+          font-weight: 400;
+        }
+        input:disabled { opacity: .35; cursor: not-allowed; }
+
         /* 导出对话框 */
         .dialog-mask {
           position: fixed; inset: 0; background: rgba(0,0,0,.45);
@@ -702,13 +834,29 @@ export class BookmarkConversionPage extends SunPanelPageElement {
         ` : ''}
 
         ${this.treeReady ? html`
-          <div class="tree-actions">
-            <a @click=${this.selectAll}>${this.t('BM_SELECT_ALL')}</a>
-            <a @click=${this.clearAll}>${this.t('BM_CLEAR_ALL')}</a>
+          <div class="preview-tabs">
+            <span class="preview-tab ${this.previewTab === 'plans' ? 'active' : ''}" @click=${() => this.setPreviewTab('plans')}>
+              ${this.t('BM_TAB_PLANS')}
+            </span>
+            <span class="preview-tab ${this.previewTab === 'tree' ? 'active' : ''}" @click=${() => this.setPreviewTab('tree')}>
+              ${this.t('BM_TAB_TREE')}
+            </span>
           </div>
-          <div class="tree-container">
-            ${this.tree.length ? this.tree.map(node => this.renderTreeNode(node)) : html`<div class="tree-empty">${this.t('BM_TREE_EMPTY')}</div>`}
-          </div>
+
+          ${this.previewTab === 'plans' ? html`
+            <div class="plans-preview">
+              ${this.renderPlanPreview(planPreview?.A ?? [], 'A')}
+              ${this.renderPlanPreview(planPreview?.B ?? [], 'B')}
+            </div>
+          ` : html`
+            <div class="tree-actions">
+              <a @click=${this.selectAll}>${this.t('BM_SELECT_ALL')}</a>
+              <a @click=${this.clearAll}>${this.t('BM_CLEAR_ALL')}</a>
+            </div>
+            <div class="tree-container">
+              ${this.tree.length ? this.tree.map(node => this.renderTreeNode(node)) : html`<div class="tree-empty">${this.t('BM_TREE_EMPTY')}</div>`}
+            </div>
+          `}
         ` : html`
           <div class="tree-container">
             <div class="tree-empty">${this.t('BM_TREE_HINT')}</div>
@@ -722,15 +870,15 @@ export class BookmarkConversionPage extends SunPanelPageElement {
         <div class="dialog-mask" @click=${this.closeExportDialog}>
           <div class="dialog" @click=${(e) => e.stopPropagation()}>
             <h3>${this.t('BM_EXPORT_TITLE')}</h3>
-            <div class="plan-option ${this.exportPlan === 'A' ? 'selected' : ''}" @click=${() => this.exportPlan = 'A'}>
-              <input type="radio" name="plan" value="A" .checked=${this.exportPlan === 'A'} @change=${() => this.exportPlan = 'A'}>
+            <div class="plan-option ${this.exportPlan === 'A' ? 'selected' : ''}" @click=${() => this.selectPlan('A')}>
+              <input type="radio" name="plan" value="A" .checked=${this.exportPlan === 'A'} @change=${() => this.selectPlan('A')}>
               <div>
                 <div class="plan-title">${this.t('BM_PLAN_A_TITLE')}</div>
                 <div class="plan-desc">${this.t('BM_PLAN_A_DESC')}</div>
               </div>
             </div>
-            <div class="plan-option ${this.exportPlan === 'B' ? 'selected' : ''}" @click=${() => this.exportPlan = 'B'}>
-              <input type="radio" name="plan" value="B" .checked=${this.exportPlan === 'B'} @change=${() => this.exportPlan = 'B'}>
+            <div class="plan-option ${this.exportPlan === 'B' ? 'selected' : ''}" @click=${() => this.selectPlan('B')}>
+              <input type="radio" name="plan" value="B" .checked=${this.exportPlan === 'B'} @change=${() => this.selectPlan('B')}>
               <div>
                 <div class="plan-title">${this.t('BM_PLAN_B_TITLE')}</div>
                 <div class="plan-desc">${this.t('BM_PLAN_B_DESC')}</div>

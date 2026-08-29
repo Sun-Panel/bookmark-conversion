@@ -54,6 +54,12 @@ export default {
   BM_TREE_EMPTY: 'No links to display',
   BM_TREE_HINT: 'After import and conversion, the checkable bookmark tree will be shown here',
 
+  // Preview tabs
+  BM_TAB_PLANS: 'Plan Preview',
+  BM_TAB_TREE: 'Original Tree',
+  BM_FOLDER_EMPTY: 'Empty',
+  BM_PREVIEW_MORE: '{count} more links',
+
   // Export dialog
   BM_EXPORT_TITLE: 'Choose Grouping Plan',
   BM_PLAN_A_TITLE: 'Plan A: Top-level Groups',

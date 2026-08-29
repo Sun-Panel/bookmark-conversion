@@ -54,6 +54,12 @@ export default {
   BM_TREE_EMPTY: '没有可显示的链接',
   BM_TREE_HINT: '导入并转换后，此处将显示可勾选的书签树形列表',
 
+  // 预览 Tab
+  BM_TAB_PLANS: '方案预览',
+  BM_TAB_TREE: '原始树',
+  BM_FOLDER_EMPTY: '空',
+  BM_PREVIEW_MORE: '等 {count} 个链接',
+
   // 导出对话框
   BM_EXPORT_TITLE: '选择分组方案',
   BM_PLAN_A_TITLE: '方案A：顶层分组',
