@@ -1,0 +1,45 @@
+{
+  "appJsonVersion": "1.1",
+  "microAppId": "hslr-hello-world",
+  "version": "1.1.0",
+  "apiVersion": "1.0.19",
+  "author": "hslr",
+  "entry": "main.js",
+  "icon": "icon.png",
+  "components": {
+    "pages": {
+      "hello-world-config": {
+        "background": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"
+      }
+    },
+    "widgets": {
+      "hello-world-widget": {
+        "configComponentName": "hello-world-config",
+        "size": [
+          "1x1",
+          "1x2",
+          "1xfull",
+          "2x1",
+          "2x2",
+          "2x4",
+          "4x4"
+        ],
+        "background": "",
+        "isModifyBackground": false
+      }
+    }
+  },
+  "permissions": [],
+  "dataNodes": {},
+  "networkDomains": [],
+  "appInfo": {
+    "appName": "$t:APP_NAME",
+    "description": "$t:APP_DESCRIPTION",
+    "networkDescription": "$t:NETWORK_DESCRIPTION"
+  },
+  "locales": {
+    "zh-CN": "zh-CN.json",
+    "en-US": "en-US.json"
+  },
+  "defaultLocale": "en-US"
+}

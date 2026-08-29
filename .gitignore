@@ -1,0 +1,7 @@
+node_modules
+dist
+.history
+packages/*.zip
+.DS_Store
+.template-sync-info.json
+packages/*
