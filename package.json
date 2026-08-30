@@ -35,5 +35,7 @@
     "jszip": "^3.10.1",
     "lit": "^3.3.2",
     "lit-html": "^3.3.2"
-  }
+  },
+  "templateName": "microapp-template",
+  "templateVersion": "1.1.1"
 }

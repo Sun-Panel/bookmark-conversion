@@ -55,28 +55,20 @@ function extractComponentsMeta() {
  * 注意：组件名保持原样，标签名由主应用在注册时生成
  */
 function generateAppJson() {
-  const { appJsonVersion, author, microAppId, version, entry, icon, appInfo, permissions, networkDomains, dataNodes, locales, defaultLocale } = appConfig;
+  // 应用级配置整体透传（microAppId 需拼接 -dev 后缀，故单独取出）
+  const { microAppId, ...restConfig } = appConfig;
   const components = extractComponentsMeta();
 
   // dev 模式下自动添加 -dev 后缀
   const finalMicroId = isDev ? `${microAppId}-dev` : microAppId;
 
-  // 构建 app.json 对象
+  // 构建 app.json 对象（其余配置项全部透传，新增配置无需修改此脚本）
   const appJson = {
-    appJsonVersion: appJsonVersion || '1.0',
+    ...restConfig,
+    appJsonVersion: restConfig.appJsonVersion || '1.0',
     microAppId: finalMicroId,
-    version,
     apiVersion: SP_API_VERSION,
-    author,
-    entry,
-    icon,
-    components: {},
-    permissions,
-    dataNodes,
-    networkDomains,
-    appInfo,
-    locales,
-    defaultLocale
+    components: {}
   };
 
   // 构建组件配置（保持原始组件名，不生成标签名）
@@ -86,23 +78,22 @@ function generateAppJson() {
   };
 
   // 处理页面组件（使用原始组件名）
+  // 排除 component（JS 对象引用，无法序列化），其余字段全部透传
+  // 新增配置项无需再修改此脚本
   if (components.pages) {
     for (const [name, page] of Object.entries(components.pages)) {
-      componentsConfig.pages[name] = {
-        background: page.background || ''
-      };
+      const pageMeta = { ...page };
+      delete pageMeta.component;
+      componentsConfig.pages[name] = pageMeta;
     }
   }
 
   // 处理小部件组件（使用原始组件名）
   if (components.widgets) {
     for (const [name, widget] of Object.entries(components.widgets)) {
-      componentsConfig.widgets[name] = {
-        configComponentName: widget.configComponentName || null,
-        size: widget.size || ['1x1'],
-        background: widget.background || '',
-        isModifyBackground: widget.isModifyBackground || false
-      };
+      const widgetMeta = { ...widget };
+      delete widgetMeta.component;
+      componentsConfig.widgets[name] = widgetMeta;
     }
   }
 
