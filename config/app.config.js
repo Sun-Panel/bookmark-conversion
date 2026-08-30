@@ -13,7 +13,7 @@ export default {
   // 作者标识
   author: 'hslr',
   // 应用唯一标识（作者标识-应用标识）
-  microAppId: 'hslr-sun-panel-bookmark-conversion',
+  microAppId: 'sun-panel-bookmark-conversion',
   // 应用版本
   version: '1.0.0',
   // 入口文件

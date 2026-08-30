@@ -1,6 +1,6 @@
 {
   "appJsonVersion": "1.1",
-  "microAppId": "hslr-sun-panel-bookmark-conversion",
+  "microAppId": "sun-panel-bookmark-conversion",
   "version": "1.0.0",
   "apiVersion": "1.0.19",
   "author": "hslr",
@@ -18,17 +18,10 @@
         "size": [
           "1x1",
           "1x2",
-          "1xfull",
-          "2x1",
-          "2x2",
-          "2x4",
-          "4x4"
+          "2x2"
         ],
         "background": "",
-        "isModifyBackground": false,
-        "widgetName": "$t:WIDGET_BM_NAME",
-        "widgetDescription": "$t:WIDGET_BM_DESCRIPTION",
-        "sort": 10
+        "isModifyBackground": false
       }
     }
   },

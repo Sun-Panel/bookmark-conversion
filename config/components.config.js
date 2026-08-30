@@ -16,11 +16,13 @@ export default {
       // 组件对象（直接引用）
       component: BookmarkConversionPage,
       // 背景颜色 支持css样式，为空底色默认为白色
-      background: '',
+      background: 'white',
+      backgroundDark:'#333333',
       // 头部文字颜色
       headerTextColor: '#1890ff',
       // 微应用入口页面/主页面
       type: 'main',
+      showFullScreenBtn: true,
     },
   },
 
