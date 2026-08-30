@@ -20,10 +20,12 @@ export class BookmarkConversionWidget extends SunPanelWidgetElement {
       componentName: 'bookmark-conversion-main',
       title: this.t('BM_TITLE'),
       windowConfig: {
-        width: 960,
-        height: 720,
-        resize: true,
-        move: true,
+        // 背景颜色 支持css样式，为空底色默认为白色
+        background: 'white',
+        backgroundDark:'#333333',
+        // 头部文字颜色
+        headerTextColor: '#1890ff',
+        showFullscreenBtn: true,
       },
     });
   }
