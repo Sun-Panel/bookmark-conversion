@@ -44,17 +44,24 @@ initSDK({
 // Micro-app package definition (system-managed, do not modify)
 // 微应用包定义（系统管理区域，勿手动修改以下代码）
 // =============================================
-const isTest = import.meta.env.DEV || import.meta.env.MODE === 'development';
-const getMicroAppId = (config, isTestMode) => {
-  return isTestMode ? `${config.microAppId}-test` : config.microAppId;
+// 环境区分（由 package.json 中的 VITE_MICRO_MODE 环境变量控制）：
+//   npm run dev（在线运行）          → -dev 后缀
+//   pack:dev / pack:test（打包测试） → -test 后缀
+//   npm run pack（正式打包）         → 无后缀
+const runMode = import.meta.env.VITE_MICRO_MODE; // 'dev' | 'test' | undefined(生产)
+const isDevMode = runMode === 'dev' || runMode === 'test';
+const getMicroAppId = (config, mode) => {
+  if (mode === 'dev') return `${config.microAppId}-dev`;
+  if (mode === 'test') return `${config.microAppId}-test`;
+  return config.microAppId;
 };
 
 const microAppPackage = {
   appConfig: {
     ...appConfig,
     apiVersion: SP_API_VERSION,
-    microAppId: getMicroAppId(appConfig, isTest),
-    dev: isTest,
+    microAppId: getMicroAppId(appConfig, runMode),
+    dev: isDevMode,
   },
   components: componentsConfig,
 };

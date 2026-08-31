@@ -67,8 +67,8 @@ function generateAppJson() {
     ...restConfig,
     appJsonVersion: restConfig.appJsonVersion || '1.0',
     microAppId: finalMicroId,
-    // 测试模式自动开启 debug 方便调试，生产模式强制关闭（正式发布不携带调试模式）
-    debug: isTest,
+    // 测试模式自动开启 debug 方便调试，生产模式透传配置值（由 config/app.config.js 控制）
+    debug: isTest ? true : restConfig.debug,
     apiVersion: SP_API_VERSION,
     components: {}
   };
