@@ -8,7 +8,7 @@ import {
   buildGroupsPlanA, buildGroupsPlanB, createConfigV2,
   ICON_FOLDER_NAME, resolveDataUriIcon, getTextIconChar, getTextIconColor,
 } from '../utils/configGenerator.js';
-import { downloadFavicon, runWithConcurrency } from '../utils/faviconDownloader.js';
+import { downloadFavicon, runWithConcurrency, getSiteOrigin, guessImageExt } from '../utils/faviconDownloader.js';
 import { md5Bytes } from '../utils/md5.js';
 
 /**
@@ -173,31 +173,56 @@ export class BookmarkConversionPage extends SunPanelPageElement {
   }
 
   // ============================================================
-  // favicon 自动下载（后台，限并发）
+  // favicon 自动获取（后台，限并发）
+  // 远程 URL 为主（Sun Panel 配置 type=2 直接支持远程图标，获取率接近 100%），
+  // 本地下载尽力而为（SVG 透传还原 / PNG canvas，离线可用）：
+  //  - 按域名去重（同一域名只解析一次，多个链接共享）
+  //  - 按实际类型保存扩展名（svg/png/ico）
+  //  - 本地化失败时保留远程图标 URL，不再退回文字图标
   // ============================================================
   async startFaviconDownload(targets) {
     this.faviconState = { total: targets.length, done: 0, success: 0, fail: 0 };
     this.requestUpdate();
 
+    // 域名级缓存：origin -> { remoteUrl, blob, ext } | null
+    const domainCache = new Map();
+
     await runWithConcurrency(targets, 6, async (link) => {
       if (!link || link.type !== 'link')
       {return;}
-      let blob = null;
-      try {
-        blob = await downloadFavicon(link.url, this.spCtx);
+      const origin = getSiteOrigin(link.url);
+      let result = null;
+      if (origin) {
+        if (domainCache.has(origin)) {
+          result = domainCache.get(origin);
+        }
+        else {
+          try {
+            result = await downloadFavicon(origin, this.spCtx);
+          }
+          catch {
+            result = null;
+          }
+          domainCache.set(origin, result);
+        }
       }
-      catch {
-        blob = null;
-      }
-      if (blob && blob.size > 0) {
-        const bytes = new Uint8Array(await blob.arrayBuffer());
-        const fileName = `${md5Bytes(bytes)}.png`;
+
+      if (result?.blob && result.blob.size > 0) {
+        // 本地图标（离线可用）：按实际类型保存（修复 SVG 被强制存为 .png 的问题）
+        const bytes = new Uint8Array(await result.blob.arrayBuffer());
+        const ext = result.ext || guessImageExt(result.remoteUrl, result.blob);
+        const fileName = `${md5Bytes(bytes)}.${ext}`;
         if (!this.iconFiles.has(fileName)) {
-          this.iconFiles.set(fileName, new Blob([bytes], { type: 'image/png' }));
+          this.iconFiles.set(fileName, new Blob([bytes], { type: result.blob.type || 'image/png' }));
         }
         this.linkFaviconMap.set(link.id, fileName);
         // 缓存 data URL 用于树形列表展示（避免 object URL 泄漏）
-        link.faviconDataUrl = await blobToDataURL(blob);
+        link.faviconDataUrl = await blobToDataURL(result.blob);
+        this.faviconState.success++;
+      }
+      else if (result?.remoteUrl && !link.icon) {
+        // 远程图标：Sun Panel 配置支持 http(s) URL 图标（获取率主保障）
+        link.icon = result.remoteUrl;
         this.faviconState.success++;
       }
       else {
@@ -458,20 +483,52 @@ export class BookmarkConversionPage extends SunPanelPageElement {
   }
 
   // ============================================================
-  // 方案预览：实时计算两个方案的分组（过滤未勾选链接）
+  // 方案预览：实时计算两个方案的分组（保留全部链接，勾选状态由 checkedIds 决定）
   // ============================================================
   getPlanPreview() {
     if (!this.treeReady) {
       return null;
     }
-    const checkedSet = this.checkedIds;
     const buildPreview = (groupFn) => groupFn(this.tree)
-      .map(g => ({ ...g, nodes: g.nodes.filter(n => n.type === 'link' && checkedSet.has(n.id)) }))
+      .map(g => ({ ...g, nodes: g.nodes.filter(n => n.type === 'link') }))
       .filter(g => g.nodes.length > 0);
     return {
       A: buildPreview(buildGroupsPlanA),
       B: buildPreview(buildGroupsPlanB),
     };
+  }
+
+  // 方案预览分组勾选状态（按分组内链接统计）
+  getGroupCheckState(nodes) {
+    let linkTotal = 0;
+    let checkedCount = 0;
+    for (const n of nodes) {
+      if (n.type !== 'link')
+      {continue;}
+      linkTotal++;
+      if (this.checkedIds.has(n.id))
+      {checkedCount++;}
+    }
+    if (linkTotal === 0)
+    {return 'none';}
+    if (checkedCount === linkTotal)
+    {return 'all';}
+    if (checkedCount > 0)
+    {return 'partial';}
+    return 'none';
+  }
+
+  // 切换方案预览分组内所有链接的勾选
+  toggleGroup(nodes) {
+    const links = nodes.filter(n => n.type === 'link');
+    const state = this.getGroupCheckState(nodes);
+    if (state === 'all' || state === 'partial') {
+      links.forEach(n => this.checkedIds.delete(n.id));
+    }
+    else {
+      links.forEach(n => this.checkedIds.add(n.id));
+    }
+    this.requestUpdate();
   }
 
   // ============================================================
@@ -562,7 +619,6 @@ export class BookmarkConversionPage extends SunPanelPageElement {
   // 方案预览渲染
   // ============================================================
   renderPlanPreview(groups, planKey) {
-    const MAX_LINKS = 12;
     const isPlanA = planKey === 'A';
     return html`
       <div class="plan-preview">
@@ -571,26 +627,37 @@ export class BookmarkConversionPage extends SunPanelPageElement {
           <div class="plan-preview-desc">${isPlanA ? this.t('BM_PLAN_A_DESC') : this.t('BM_PLAN_B_DESC')}</div>
         </div>
         <div class="plan-preview-body">
-          ${groups.length ? groups.map(g => html`
-            <div class="preview-group">
-              <div class="preview-group-title">
-                <span class="folder-icon">📁</span>
-                <span class="preview-group-name" title="${g.title}">${g.title}</span>
-                <span class="preview-group-count">(${g.nodes.length})</span>
-              </div>
-              <div class="preview-group-links">
-                ${g.nodes.slice(0, MAX_LINKS).map(link => html`
-                  <div class="preview-link">
-                    ${this.renderLinkIcon(link)}
-                    <span class="preview-link-title" title="${link.title}">${link.title}</span>
-                  </div>
-                `)}
-                ${g.nodes.length > MAX_LINKS ? html`
-                  <div class="preview-more">… ${this.t('BM_PREVIEW_MORE', { count: g.nodes.length - MAX_LINKS })}</div>
-                ` : ''}
-              </div>
+          ${groups.length ? groups.map(g => this.renderPreviewGroup(g)) : html`<div class="preview-empty">${this.t('BM_EXPORT_NONE')}</div>`}
+        </div>
+      </div>
+    `;
+  }
+
+  renderPreviewGroup(group) {
+    const state = this.getGroupCheckState(group.nodes);
+    return html`
+      <div class="preview-group">
+        <div class="preview-group-title">
+          <label class="check-label">
+            <input type="checkbox"
+              .indeterminate=${state === 'partial'}
+              .checked=${state === 'all' || state === 'partial'}
+              @change=${() => this.toggleGroup(group.nodes)}>
+          </label>
+          <span class="folder-icon">📁</span>
+          <span class="preview-group-name" title="${group.title}">${group.title}</span>
+          <span class="preview-group-count">(${group.nodes.length})</span>
+        </div>
+        <div class="preview-group-links">
+          ${group.nodes.map(link => html`
+            <div class="preview-link">
+              <label class="check-label">
+                <input type="checkbox" .checked=${this.checkedIds.has(link.id)} @change=${() => this.toggleLink(link.id)}>
+              </label>
+              ${this.renderLinkIcon(link)}
+              <span class="preview-link-title" title="${link.title}">${link.title}</span>
             </div>
-          `) : html`<div class="preview-empty">${this.t('BM_EXPORT_NONE')}</div>`}
+          `)}
         </div>
       </div>
     `;
@@ -739,13 +806,14 @@ export class BookmarkConversionPage extends SunPanelPageElement {
           display: flex; align-items: center; gap: 6px;
           font-weight: 600; font-size: 13px; padding: 3px 0;
         }
-        .preview-group-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .preview-group-count { color: #8c8c8c; font-weight: 400; font-size: 11px; }
-        .preview-group-links { padding-left: 22px; }
+        .preview-group-title .check-label { flex-shrink: 0; display: flex; align-items: center; }
+        .preview-group-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .preview-group-count { color: #8c8c8c; font-weight: 400; font-size: 11px; flex-shrink: 0; }
+        .preview-group-links { padding-left: 20px; }
         .preview-link { display: flex; align-items: center; gap: 6px; padding: 2px 0; font-size: 12px; }
+        .preview-link .check-label { flex-shrink: 0; display: flex; align-items: center; }
         .preview-link .link-icon { width: 18px; height: 18px; font-size: 10px; border-radius: 4px; }
-        .preview-link-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: ${darkMode ? '#bbb' : '#595959'}; }
-        .preview-more { font-size: 11px; color: #8c8c8c; padding-left: 24px; }
+        .preview-link-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: ${darkMode ? '#bbb' : '#595959'}; }
         .preview-empty { text-align: center; color: #8c8c8c; padding: 30px 0; font-size: 12px; }
 
         /* 空文件夹 */

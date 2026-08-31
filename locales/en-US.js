@@ -7,7 +7,7 @@ export default {
   // App basic information
   APP_NAME: 'Bookmark Converter',
   APP_DESCRIPTION: 'Convert browser HTML bookmark files to Sun-Panel v2 importable config files',
-  NETWORK_DESCRIPTION: 'No network required (favicon download is best-effort, falls back to text icons on failure)',
+  NETWORK_DESCRIPTION: 'Network required for favicon fetching (parses real page icons via the host proxy; remote icon URLs near 100% hit rate, local embedding is best-effort)',
 
   // Widget
   WIDGET_BM_NAME: 'Bookmark Converter',
@@ -67,5 +67,5 @@ export default {
   BM_PLAN_B_TITLE: 'Plan B: All Folder Groups',
   BM_PLAN_B_DESC: 'Every folder at any level becomes a group; links belong to their direct parent folder (more groups, smaller each)',
 
-  BM_FOOTER_HINT: 'Tip: Icons are automatically converted to image files (base64 icons 100%; favicon is best-effort, falls back to text icons). The exported file can be imported directly into Sun-Panel',
+  BM_FOOTER_HINT: 'Tip: Icons are fetched automatically (base64 icons 100%; others are parsed via the host network proxy — remote icon URLs are primary with near 100% hit rate, local embedding is best-effort; only very few fall back to text icons). The exported file can be imported directly into Sun-Panel',
 };

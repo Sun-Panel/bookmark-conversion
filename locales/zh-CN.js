@@ -7,7 +7,7 @@ export default {
   // 应用基本信息
   APP_NAME: '书签转换工具',
   APP_DESCRIPTION: '将浏览器导出的 HTML 书签文件转换为 Sun-Panel v2 可导入的配置文件',
-  NETWORK_DESCRIPTION: '无需联网（favicon 下载为尽力而为，失败自动退回文字图标）',
+  NETWORK_DESCRIPTION: '需联网获取 favicon（通过网络透传解析网页真实图标，远程图标 URL 获取率接近 100%，本地化尽力而为）',
 
   // 小部件
   WIDGET_BM_NAME: '书签转换工具',
@@ -67,5 +67,5 @@ export default {
   BM_PLAN_B_TITLE: '方案B：全量文件夹分组',
   BM_PLAN_B_DESC: '所有层级（含非顶层）的文件夹都提升为分组，链接归属其直接父文件夹（分组多、每组小）',
 
-  BM_FOOTER_HINT: '提示：图标将自动转换为图片文件（base64 图标 100% 转换；favicon 尽力下载，失败退回文字图标）；导出文件可直接在 Sun-Panel 中导入',
+  BM_FOOTER_HINT: '提示：图标自动获取（base64 图标 100% 转换；其余通过网络透传解析网页真实图标，远程图标 URL 为主、本地文件尽力而为，仅极少数无图标的退回文字图标）；导出文件可直接在 Sun-Panel 中导入',
 };

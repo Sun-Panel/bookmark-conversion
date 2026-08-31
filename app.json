@@ -1,33 +1,10 @@
 {
   "appJsonVersion": "1.1",
-  "microAppId": "sun-panel-bookmark-conversion",
-  "version": "1.0.0",
-  "apiVersion": "1.0.19",
   "author": "hslr",
+  "version": "1.0.0",
   "entry": "main.js",
   "icon": "icon.png",
-  "components": {
-    "pages": {
-      "bookmark-conversion-main": {
-        "background": ""
-      }
-    },
-    "widgets": {
-      "bookmark-conversion-widget": {
-        "configComponentName": null,
-        "size": [
-          "1x1",
-          "1x2",
-          "2x2"
-        ],
-        "background": "",
-        "isModifyBackground": false
-      }
-    }
-  },
-  "permissions": [],
-  "dataNodes": {},
-  "networkDomains": [],
+  "debug": false,
   "appInfo": {
     "appName": "$t:APP_NAME",
     "description": "$t:APP_DESCRIPTION",
@@ -37,5 +14,36 @@
     "zh-CN": "zh-CN.json",
     "en-US": "en-US.json"
   },
-  "defaultLocale": "zh-CN"
+  "defaultLocale": "zh-CN",
+  "permissions": [],
+  "networkDomains": [
+    "*"
+  ],
+  "dataNodes": {},
+  "microAppId": "sun-panel-bookmark-conversion",
+  "apiVersion": "1.0.19",
+  "components": {
+    "pages": {
+      "bookmark-conversion-main": {
+        "background": "white",
+        "backgroundDark": "#333333",
+        "headerTextColor": "#1890ff",
+        "type": "main",
+        "showFullScreenBtn": true
+      }
+    },
+    "widgets": {
+      "bookmark-conversion-widget": {
+        "size": [
+          "1x1",
+          "1x2",
+          "2x2"
+        ],
+        "background": "",
+        "widgetName": "$t:WIDGET_BM_NAME",
+        "widgetDescription": "$t:WIDGET_BM_DESCRIPTION",
+        "sort": 10
+      }
+    }
+  }
 }

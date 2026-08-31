@@ -21,7 +21,7 @@ export default {
   // 图标
   icon: 'icon.png',
   // 调试模式（正式发布请设置为false）
-  debug: true,
+  debug: false,
 
   // 应用信息（使用 '$t: xxx' 可以引用翻译）
   appInfo: {
@@ -50,10 +50,14 @@ export default {
   ],
 
   // 网络域名白名单
-  // favicon 下载使用 <img> 标签（不经过 fetch），
-  // 但仍可能受微应用网络白名单限制；如遇失败会自动退回文字图标
+  // favicon 获取依赖网络透传接口（服务端代理，不受浏览器 CORS 限制）：
+  //  - 透传获取网页 HTML，解析 <link rel="icon"> 等真实图标地址
+  //  - 远程图标 URL 为主（Sun Panel type=2 直接支持），获取率接近 100%
+  //  - SVG 图标透传直接转换为本地文件（离线可用）；PNG/ICO 二进制经 JSON
+  //    通道会损坏，改用 canvas 尽力下载，失败仍保留远程 URL
   networkDomains: [
-    // 如需放宽，可在此添加 favicon 域名或通配（受主应用支持程度限制）
+    // 如需收紧，可在此列出允许的 favicon 域名（受主应用支持程度限制）
+    '*',
   ],
 
   // 数据节点配置
