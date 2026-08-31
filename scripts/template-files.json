@@ -24,7 +24,7 @@
       "path": "package.json",
       "description": "项目配置文件（注意：依赖版本可能会更新）",
       "mergeStrategy": "shallow",
-      "skipFields": ["name", "version", "description", "scripts"]
+      "skipFields": ["name", "version", "description"]
     },
     {
       "path": "jsconfig.json",

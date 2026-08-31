@@ -110,6 +110,11 @@ ${colors.bold}清理的废弃文件:${colors.reset}
 
 ${colors.bold}不会更新的文件:${colors.reset}
   src/components/**, config/**, app.json, public/**, locales/**, dist/**
+
+${colors.bold}模板版本管理:${colors.reset}
+  package.json 中的 templateName / templateVersion 字段记录当前项目
+  所基于的模板名称与版本。执行更新时，模板源的新版本号会自动覆盖
+  这两个字段；name / version 属于你的应用，不会被覆盖。
 `;
   console.log(help);
 }
@@ -343,6 +348,38 @@ function getGitCommitDate(dir) {
   }
 }
 
+// ==================== 模板版本读取 ====================
+
+// 读取 package.json 中记录的模板版本（templateVersion 字段）
+function readTemplateVersion(dir) {
+  try {
+    const pkgPath = join(dir, 'package.json');
+    if (!existsSync(pkgPath)) return null;
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+    return pkg.templateVersion || null;
+  } catch {
+    return null;
+  }
+}
+
+// 对比本地与远程的模板版本，并输出差异提示
+function compareTemplateVersion(localVersion, remoteVersion) {
+  if (!localVersion && !remoteVersion) return; // 双方都没有版本字段，静默
+  if (!remoteVersion) {
+    logInfo('远程模板未包含 templateVersion 字段，无法对比模板版本');
+    return;
+  }
+  if (!localVersion) {
+    logInfo(`远程模板版本 (package.json): ${remoteVersion}`);
+    return;
+  }
+  if (remoteVersion === localVersion) {
+    logInfo(`模板版本 (package.json): 一致 (${remoteVersion})`);
+  } else {
+    logWarning(`模板版本差异 (package.json): ${localVersion} → ${remoteVersion}`);
+  }
+}
+
 // ==================== 主函数 ====================
 
 async function main() {
@@ -401,6 +438,12 @@ async function main() {
     logInfo('当前模板版本: 未知（未找到 version 字段）');
   }
 
+  // 读取 package.json 中记录的模板版本（templateVersion 字段）
+  const localPkgTemplateVersion = readTemplateVersion(targetDir);
+  if (localPkgTemplateVersion) {
+    logInfo(`项目模板版本 (package.json): ${localPkgTemplateVersion}`);
+  }
+
   // 读取上次同步的 commit 信息
   const syncInfo = readSyncInfo(targetDir);
   if (syncInfo) {
@@ -429,6 +472,8 @@ async function main() {
     if (remoteCommitShortSha) {
       logInfo(`本地模板 commit: ${remoteCommitShortSha} (${remoteCommitDate || '未知时间'})`);
     }
+    // 对比本地模板的 templateVersion
+    compareTemplateVersion(localPkgTemplateVersion, readTemplateVersion(sourceDir));
   } else {
     logStep('1. 从 GitHub 拉取模板最新代码');
 
@@ -497,6 +542,9 @@ async function main() {
           // 忽略版本解析错误
         }
       }
+
+      // 读取远程 package.json 的 templateVersion 并对比
+      compareTemplateVersion(localPkgTemplateVersion, readTemplateVersion(tempDir));
     } catch (cloneError) {
       logError(`克隆仓库失败`);
       const stderrMsg = cloneError.stderr
@@ -699,6 +747,12 @@ async function main() {
 
   if (!flags.force) {
     logStep('2. 变更预览');
+
+    // 显示模板版本变化（package.json 走 merge 策略，行级 diff 中不可见）
+    const remotePkgTemplateVersion = readTemplateVersion(sourceDir);
+    if (remotePkgTemplateVersion && localPkgTemplateVersion && remotePkgTemplateVersion !== localPkgTemplateVersion) {
+      logWarning(`模板版本将更新: ${localPkgTemplateVersion} → ${remotePkgTemplateVersion}`);
+    }
 
     const changedFiles = filesToSync.filter(f => f.diffs.length > 0);
     const newMerges = filesToSync.filter(f => f.diffs.length === 0 && !f.fileInfo.overwriteIfUnchanged);
@@ -920,6 +974,7 @@ async function main() {
         syncedAt: new Date().toISOString(),
         version: localTemplateVersion || null,
         remoteVersion: null,
+        templateVersion: readTemplateVersion(targetDir),
       };
 
       // 读取远程版本号
@@ -951,6 +1006,11 @@ async function main() {
 
   if (updatedCount > 0) {
     logSuccess('模板更新完成！');
+    // 打印更新后的模板版本
+    const updatedTemplateVersion = readTemplateVersion(targetDir);
+    if (updatedTemplateVersion) {
+      logInfo(`当前模板版本 (package.json): ${updatedTemplateVersion}`);
+    }
     if (remoteCommitShortSha) {
       logInfo(`已同步至 commit: ${remoteCommitShortSha} (${remoteCommitDate || ''})`);
     }

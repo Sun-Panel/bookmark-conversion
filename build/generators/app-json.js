@@ -20,10 +20,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 /**
- * 判断是否为开发环境
+ * 判断是否为测试模式
  * 根据打包命令的 NODE_ENV 来判断
  */
-const isDev = process.env.NODE_ENV === 'development';
+const isTest = process.env.NODE_ENV === 'development';
 
 /**
  * 从 components.config.js 文件提取元数据（不导入组件）
@@ -55,18 +55,20 @@ function extractComponentsMeta() {
  * 注意：组件名保持原样，标签名由主应用在注册时生成
  */
 function generateAppJson() {
-  // 应用级配置整体透传（microAppId 需拼接 -dev 后缀，故单独取出）
+  // 应用级配置整体透传（microAppId 需拼接 -test 后缀，故单独取出）
   const { microAppId, ...restConfig } = appConfig;
   const components = extractComponentsMeta();
 
-  // dev 模式下自动添加 -dev 后缀
-  const finalMicroId = isDev ? `${microAppId}-dev` : microAppId;
+  // 测试模式下自动添加 -test 后缀
+  const finalMicroId = isTest ? `${microAppId}-test` : microAppId;
 
   // 构建 app.json 对象（其余配置项全部透传，新增配置无需修改此脚本）
   const appJson = {
     ...restConfig,
     appJsonVersion: restConfig.appJsonVersion || '1.0',
     microAppId: finalMicroId,
+    // 测试模式自动开启 debug 方便调试，生产模式强制关闭（正式发布不携带调试模式）
+    debug: isTest,
     apiVersion: SP_API_VERSION,
     components: {}
   };
@@ -105,7 +107,7 @@ function generateAppJson() {
 
   console.log(`✅ app.json generated: ${outputPath}`);
   console.log(`📦 App: ${finalMicroId}`);
-  console.log(`🔧 Environment: ${isDev ? 'development' : 'production'}`);
+  console.log(`🔧 Environment: ${isTest ? 'test' : 'production'}`);
   console.log(`📄 Pages: ${Object.keys(componentsConfig.pages).join(', ')}`);
   console.log(`🎨 Widgets: ${Object.keys(componentsConfig.widgets).join(', ')}`);
 

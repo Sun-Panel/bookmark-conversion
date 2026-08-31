@@ -44,17 +44,17 @@ initSDK({
 // Micro-app package definition (system-managed, do not modify)
 // 微应用包定义（系统管理区域，勿手动修改以下代码）
 // =============================================
-const isDev = import.meta.env.DEV || import.meta.env.MODE === 'development';
-const getMicroAppId = (config, isDevelopment) => {
-  return isDevelopment ? `${config.microAppId}-dev` : config.microAppId;
+const isTest = import.meta.env.DEV || import.meta.env.MODE === 'development';
+const getMicroAppId = (config, isTestMode) => {
+  return isTestMode ? `${config.microAppId}-test` : config.microAppId;
 };
 
 const microAppPackage = {
   appConfig: {
     ...appConfig,
     apiVersion: SP_API_VERSION,
-    microAppId: getMicroAppId(appConfig, isDev),
-    dev: isDev,
+    microAppId: getMicroAppId(appConfig, isTest),
+    dev: isTest,
   },
   components: componentsConfig,
 };

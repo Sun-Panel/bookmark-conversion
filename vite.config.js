@@ -8,7 +8,8 @@ import { resolve } from 'path';
 import { existsSync } from 'fs';
 
 /**
- * 判断是否为开发环境
+ * 判断是否为测试模式（NODE_ENV=development 标识）
+ * 同时服务于开发服务器（npm run dev）和测试打包（npm run pack:test）
  */
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -121,7 +122,11 @@ export default defineConfig(async () => {
   return {
     root: '.',
     publicDir: 'public',
-    plugins: isDev ? [eslintPlugin(), localesJsonProxy()] : [forceMinifyPlugin(), compileLocalesPlugin()],
+    // compileLocalesPlugin 在 dev 构建时也必须启用，否则 dist/locales/*.json 不会生成，
+    // 导致打包出的 zip 缺少主应用解析 $t:APP_NAME 等翻译所需的语言文件
+    plugins: isDev
+      ? [eslintPlugin(), localesJsonProxy(), compileLocalesPlugin()]
+      : [forceMinifyPlugin(), compileLocalesPlugin()],
 
     esbuild: {
       // 移除所有注释，确保完全压缩

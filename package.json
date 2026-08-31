@@ -37,5 +37,5 @@
     "lit-html": "^3.3.2"
   },
   "templateName": "microapp-template",
-  "templateVersion": "1.1.1"
+  "templateVersion": "1.1.2"
 }

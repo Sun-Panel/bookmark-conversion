@@ -14,9 +14,9 @@ const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '..');
 
 /**
- * Check if development environment
+ * Check if test environment
  */
-const isDev = process.env.NODE_ENV === 'development';
+const isTest = process.env.NODE_ENV === 'development';
 
 /**
  * Recursively copy directory
@@ -93,7 +93,7 @@ function pack() {
 
   console.log(`✅ Package created: ${zipPath}`);
   console.log(`📦 Package: ${zipFileName}`);
-  console.log(`🔧 Environment: ${isDev ? 'development' : 'production'}`);
+  console.log(`🔧 Environment: ${isTest ? 'test' : 'production'}`);
 
   // Show excluded files
   if (excludedFiles.length > 0) {
