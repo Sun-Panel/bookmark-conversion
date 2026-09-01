@@ -11,7 +11,7 @@ export default {
   // 配置文件格式版本
   appJsonVersion: '1.1',
   // 作者标识
-  author: 'hslr',
+  author: 'sun-panel',
   // 应用唯一标识（作者标识-应用标识）
   microAppId: 'sun-panel-bookmark-conversion',
   // 应用版本
